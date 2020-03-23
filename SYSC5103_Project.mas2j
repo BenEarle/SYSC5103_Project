@@ -1,19 +1,41 @@
-/*
-    sYSC5103_Project
-    ---------------------------
-
-    Jason Project File
-
-    This file defines the initial state of the MAS
-
-    Jason 
-    March 21, 2020 - 14:33:28
-*/
-
-MAS Sysc5103_Project {
-
-    infrastructure: Centralised
-
-    agents:
-}
+/*
+
+    sYSC5103_Project
+
+    ---------------------------
+
+
+
+    Jason Project File
+
+
+
+    This file defines the initial state of the MAS
+
+
+
+    Jason 
+
+    March 21, 2020 - 14:33:28
+
+*/
+
+
+
+MAS sYSC5103_Project {
+
+
+
+    infrastructure: Centralised
+
+
+
+    environment: KrisletEnvironment
+
+    agents:
+
+        playerAgent;
+
+}
+
 

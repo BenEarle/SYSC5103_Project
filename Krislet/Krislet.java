@@ -95,7 +95,7 @@ class Krislet implements SendCommand
 				     port, team);
 
 	// enter main loop
-	player.mainLoop();							
+	//player.mainLoop();							
     }  
 
     //---------------------------------------------------------------------------
@@ -108,6 +108,7 @@ class Krislet implements SendCommand
 	m_port = port;
 	m_team = team;
 	m_playing = true;
+	m_memory = new Memory();
     }
 																 
     //---------------------------------------------------------------------------
@@ -123,7 +124,7 @@ class Krislet implements SendCommand
 
     //---------------------------------------------------------------------------
     // This is main loop for player
-    protected void mainLoop() throws IOException
+    protected void mainInit() throws IOException
     {
 	byte[] buffer = new byte[MSG_SIZE];
 	DatagramPacket packet = new DatagramPacket(buffer, MSG_SIZE);
@@ -134,14 +135,16 @@ class Krislet implements SendCommand
 	m_socket.receive(packet);
 	parseInitCommand(new String(buffer));
 	m_port = packet.getPort();
-
-	// Now we should be connected to the server
-	// and we know side, player number and play mode
-	while( m_playing )
-	    parseSensorInformation(receive());
-	finalize();
+	    
     }
 
+    protected void mainUpdate() throws IOException {
+		parseSensorInformation(receive());
+    }
+
+    protected void end() {
+		finalize();
+    }
 
     //===========================================================================
     // Implementation of SendCommand Interface
@@ -211,13 +214,7 @@ class Krislet implements SendCommand
 	    {
 		throw new IOException(message);
 	    }
-
-	// initialize player's brain
-	m_brain = new Brain(this,
-			    m_team, 
-			    m.group(1).charAt(0),
-			    Integer.parseInt(m.group(2)),
-			    m.group(3));
+	    m_side = m.group(1).charAt(0);
     }
 
 
@@ -246,7 +243,7 @@ class Krislet implements SendCommand
 	    {
 		VisualInfo	info = new VisualInfo(message);
 		info.parse();
-		m_brain.see(info);
+		m_memory.store(info);
 	    }
 	else if( m.group(1).compareTo("hear") == 0 )
 	    parseHear(message);
@@ -270,12 +267,12 @@ class Krislet implements SendCommand
 	time = Integer.parseInt(m.group(1));
 	sender = m.group(2);
 	uttered = m.group(3);
-	if( sender.compareTo("referee") == 0 )
-	    m_brain.hear(time,uttered);
+	//if( sender.compareTo("referee") == 0 )
+	    //m_brain.hear(time,uttered);
 	//else if( coach_pattern.matcher(sender).find())
 	//    m_brain.hear(time,sender,uttered);
-	else if( sender.compareTo("self") != 0 )
-	    m_brain.hear(time,Integer.parseInt(sender),uttered);
+	//else if( sender.compareTo("self") != 0 )
+	    //m_brain.hear(time,Integer.parseInt(sender),uttered);
     }
 
 
@@ -320,10 +317,12 @@ class Krislet implements SendCommand
     private InetAddress		m_host;			// Server address
     private int			m_port;			// server port
     private String		m_team;			// team name
-    private SensorInput		m_brain;		// input for sensor information
+    //private SensorInput		m_brain;		// input for sensor information
     private boolean             m_playing;              // controls the MainLoop
     private Pattern message_pattern = Pattern.compile("^\\((\\w+?)\\s.*");
     private Pattern hear_pattern = Pattern.compile("^\\(hear\\s(\\w+?)\\s(\\w+?)\\s(.*)\\).*");
+    public Memory m_memory;
+    public char m_side;
     //private Pattern coach_pattern = Pattern.compile("coach");
     // constants
     private static final int	MSG_SIZE = 4096;	// Size of socket buffer

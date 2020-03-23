@@ -26,7 +26,7 @@ class Memory
     public ObjectInfo getObject(String name) 
     {
 	if( m_info == null )
-	    waitForNewInfo();
+	    return null;
 
 	for(int c = 0 ; c < m_info.m_objects.size() ; c ++)
 	    {
