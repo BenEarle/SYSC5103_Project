@@ -42,10 +42,10 @@ public class KrisletEnvironment extends Environment {
     }
 
 
-	public static final Term    enteringInTheField = Literal.parseLiteral("enteringInTheField");
-	public static final Term    turn40 = Literal.parseLiteral("turn40");
-	public static final Term    dash = Literal.parseLiteral("dash");
-	public static final Term    kick = Literal.parseLiteral("kick");
+	public static final Literal    enteringInTheField = Literal.parseLiteral("enteringInTheField");
+	public static final Literal    turn40 = Literal.parseLiteral("turn40");
+	public static final Literal    dash = Literal.parseLiteral("dash");
+	public static final Literal    kick = Literal.parseLiteral("kick");
     @Override
 
     public boolean executeAction(String agName, Structure action) {
@@ -59,7 +59,9 @@ public class KrisletEnvironment extends Environment {
 			player.turn(Double.parseDouble(param));
 			break;
 		}*/
-		try{player.mainUpdate();}catch(Exception e){}
+		try{player.mainUpdate();}catch(Exception e){
+			logger.info(e.getMessage());
+		}
 		if(action.equals(enteringInTheField)){
 			act("enteringInTheField");
 		}
@@ -103,17 +105,17 @@ public class KrisletEnvironment extends Environment {
     			}
     			else if(action.equals("turn40")) {
     				player.turn(40);
-    				player.m_memory.waitForNewInfo();
+    			//	player.m_memory.waitForNewInfo();
     				return action;
     			}
     			else if(action.equals("turn80")) {
     				player.turn(80);
-    				player.m_memory.waitForNewInfo();
+    			//	player.m_memory.waitForNewInfo();
     				return action;
     			}
     			else if(action.equals("turn120")) {
     				player.turn(120);
-    				player.m_memory.waitForNewInfo();
+    			//	player.m_memory.waitForNewInfo();
     				return action;
     			}
     			else if(action.equals("turnToBall")) {
