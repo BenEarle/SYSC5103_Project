@@ -1,11 +1,12 @@
-// Environment code for project SYSC5103_Project.mas2j
-
 
 import java.io.*;
 import java.net.*;
+
 import jason.asSyntax.*;
 import jason.environment.*;
+
 import java.util.logging.*;
+import java.util.regex.Pattern;
 
 
 public class KrisletEnvironment extends Environment {
@@ -14,7 +15,7 @@ public class KrisletEnvironment extends Environment {
 
     private Logger logger = Logger.getLogger("SYSC5103_Project.mas2j."+KrisletEnvironment.class.getName());
 	private Krislet player;
-
+	
 
     /** Called before the MAS execution with the args informed in .mas2j */
 
@@ -41,7 +42,10 @@ public class KrisletEnvironment extends Environment {
     }
 
 
-	public static final Term    turn40 = Literal.parseLiteral("turn(40)");
+	public static final Term    enteringInTheField = Literal.parseLiteral("enteringInTheField");
+	public static final Term    turn40 = Literal.parseLiteral("turn40");
+	public static final Term    dash = Literal.parseLiteral("dash");
+	public static final Term    kick = Literal.parseLiteral("kick");
     @Override
 
     public boolean executeAction(String agName, Structure action) {
@@ -56,9 +60,16 @@ public class KrisletEnvironment extends Environment {
 			break;
 		}*/
 		try{player.mainUpdate();}catch(Exception e){}
-		if(action.equals(turn40)){
-			player.turn(40);
-		} else {
+		if(action.equals(enteringInTheField)){
+			act("enteringInTheField");
+		}
+		else if(action.equals(turn40)){
+			act("turn40");
+		}
+		else if(action.equals(dash)){
+			act("dash");
+		}
+		else {
 			logger.info("executing: "+action+", but not implemented!");
         }
 		if (true) { // you may improve this condition
@@ -67,12 +78,69 @@ public class KrisletEnvironment extends Environment {
 
         }
 		
+		
 
         return true; // the action was executed with success
 
     }
 
-	
+    public String act(String action){//, ArrayList<String[]> list) {
+    	ObjectInfo ball = player.m_memory.getObject("ball");
+    	ObjectInfo goal;
+    	if( player.m_side == 'l' )
+    	    goal = player.m_memory.getObject("goal r");
+    	else
+    	    goal = player.m_memory.getObject("goal l");
+    	//for (String[] s: list){
+    		//if(s[0].equals(st)) {
+    			if(action.equals("enteringInTheField")) {
+    				player.inField = true;
+    				player.move( -Math.random()*52.5 , 34 - Math.random()*68.0 );
+    			}
+    			else if(action.equals("stopPlaying")) {
+    				player.bye();
+    				return action;
+    			}
+    			else if(action.equals("turn40")) {
+    				player.turn(40);
+    				player.m_memory.waitForNewInfo();
+    				return action;
+    			}
+    			else if(action.equals("turn80")) {
+    				player.turn(80);
+    				player.m_memory.waitForNewInfo();
+    				return action;
+    			}
+    			else if(action.equals("turn120")) {
+    				player.turn(120);
+    				player.m_memory.waitForNewInfo();
+    				return action;
+    			}
+    			else if(action.equals("turnToBall")) {
+    				player.turn(ball.m_direction);
+    				return action;
+    			}
+    			else if(action.equals("dash")) {
+					player.dash(100);
+					return action;
+				}
+    			else if(action.equals("goToBall")) {
+					player.dash(10*ball.m_distance);
+					return action;
+				}
+				else if(action.equals("kickBall50")) {
+					player.kick(50, goal.m_direction);
+					return action;
+				}
+				else if(action.equals("kickBall100")) {
+					player.kick(100, goal.m_direction);
+					return action;
+			//	}
+    			//m_krislet
+    		//}
+    	}
+    	return "NoAction";
+    }
 
     /** Called before the end of MAS execution */
 
@@ -90,36 +158,62 @@ public class KrisletEnvironment extends Environment {
 			// Specify agent name !!!
 			clearPercepts();
 			//addPercept(ASSyntax.parseLiteral("percept(demo)"));
-			
-			ObjectInfo object = p.m_memory.getObject("ball");
-			if( object == null ){
-				// If you don't know where is the ball
-				logger.info("Ball was not seen");
-			} else {
-				addPercept(ASSyntax.parseLiteral("ball"));   
-				logger.info("Ball was seen");
-				/*if( object.m_distance > 1.0 ) {
-					// The ball is out of range
-					if( object.m_direction != 0 ){
-						// Not facing the ball
-					} else{
-						// Facing the ball
-					}
-				}*/
-			}
-			//System.out.println("Got Ball info");
-			// Look for the goal
-/*			if( p.m_side == 'l' )
-				object = p.m_memory.getObject("goal r");
+			//addPercept(ASSyntax.parseLiteral("ball"));   
+			//logger.info("Ball was seen");
+			ObjectInfo ball = p.m_memory.getObject("ball");
+			ObjectInfo goal;
+			if( p.m_side == 'l' )
+			    goal = p.m_memory.getObject("goal r");
 			else
-				object = p.m_memory.getObject("goal l");
-	
-			if( object == null ) {
-				// Cannot see the goal
-			} else {
-				// Can see the goal	
-			}		
-	*/	} catch (Exception e) {}
+			    goal = p.m_memory.getObject("goal l");
+		    
+			
+			
+			
+			if(/*Pattern.matches("^before_kick_off.*",m_playMode) &&*/ !p.inField) {
+				p.inField= true;
+				addPercept(ASSyntax.parseLiteral("readyToStart"));   
+				logger.info("readyToStart");
+			}
+			/*else if(//m_timeOver) {
+		    	//return "TimeOver";
+		    }*/
+		    else if( ball == null )
+			    {
+				// If you don't know where is ball then find it
+		    	addPercept(ASSyntax.parseLiteral("noBall"));   
+				logger.info("noBall");
+			    }
+			else if( ball.m_distance > 1.0 )
+			    {
+				// If ball is too far then
+				// turn to ball or 
+				// if we have correct direction then go to ball
+				if( ball.m_direction != 0 ){
+				addPercept(ASSyntax.parseLiteral("ballFarKnowDirection"));   
+				logger.info("ballFarKnowDirection");
+				}
+				else{
+					addPercept(ASSyntax.parseLiteral("ballFarNoDirection"));   
+					logger.info("ballFarNoDirection");
+					}
+			    }
+			else 
+			    {
+				// We know where is ball and we can kick it
+				// so look for goal
+				if( goal == null )
+				    {
+					addPercept(ASSyntax.parseLiteral("ballCloseNoGoal"));   
+					logger.info("ballCloseNoGoal");
+				    }
+				else{
+					addPercept(ASSyntax.parseLiteral("ballCloseSeeGoal"));   
+					logger.info("ballCloseSeeGoal");
+				}
+				   
+			    }		
+		} catch (Exception e) {}
 	}
 
 }

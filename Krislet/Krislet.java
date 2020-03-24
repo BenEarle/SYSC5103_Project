@@ -109,6 +109,7 @@ class Krislet implements SendCommand
 	m_team = team;
 	m_playing = true;
 	m_memory = new Memory();
+	inField = false;
     }
 																 
     //---------------------------------------------------------------------------
@@ -145,7 +146,9 @@ class Krislet implements SendCommand
     protected void end() {
 		finalize();
     }
-
+    
+    
+    
     //===========================================================================
     // Implementation of SendCommand Interface
 
@@ -291,6 +294,7 @@ class Krislet implements SendCommand
 
     }
 
+    
     //---------------------------------------------------------------------------
 
     // This function waits for new message from server
@@ -317,12 +321,13 @@ class Krislet implements SendCommand
     private InetAddress		m_host;			// Server address
     private int			m_port;			// server port
     private String		m_team;			// team name
-    //private SensorInput		m_brain;		// input for sensor information
+    //public Brain		m_brain;		// input for sensor information
     private boolean             m_playing;              // controls the MainLoop
     private Pattern message_pattern = Pattern.compile("^\\((\\w+?)\\s.*");
     private Pattern hear_pattern = Pattern.compile("^\\(hear\\s(\\w+?)\\s(\\w+?)\\s(.*)\\).*");
     public Memory m_memory;
     public char m_side;
+    public boolean inField;
     //private Pattern coach_pattern = Pattern.compile("coach");
     // constants
     private static final int	MSG_SIZE = 4096;	// Size of socket buffer
