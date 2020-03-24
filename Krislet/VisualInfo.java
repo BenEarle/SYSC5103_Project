@@ -227,7 +227,7 @@ class VisualInfo
 			break;
 		    case 2: // I don't think t|b occurs, but better safe than sorry
 			if(p_lrc.matcher(objectName[1]).matches())
-			    pos1 = objectName[1].charAt(0);
+			    pos1 = objectName[1].charAt(0);m_info
 			else
 			    pos2 = objectName[1].charAt(0);
 			break;

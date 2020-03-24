@@ -91,8 +91,8 @@ class Krislet implements SendCommand
 		return;
 	    }
 
-	Krislet player = new Krislet(InetAddress.getByName(hostName),
-				     port, team);
+//	Krislet player = new Krislet(InetAddress.getByName(hostName),
+//				     port, team);
 
 	// enter main loop
 	//player.mainLoop();							
@@ -100,15 +100,16 @@ class Krislet implements SendCommand
 
     //---------------------------------------------------------------------------
     // This constructor opens socket for  connection with server
-    public Krislet(InetAddress host, int port, String team) 
+    public Krislet(InetAddress host, int port, String team, String name) 
 	throws SocketException
     {
-	m_socket = new DatagramSocket();
-	m_host = host;
-	m_port = port;
-	m_team = team;
-	m_playing = true;
-	m_memory = new Memory();
+        m_socket = new DatagramSocket();
+        m_host = host;
+        m_port = port;
+        m_team = team;
+        m_playing = true;
+        m_memory = new Memory();
+        m_name = name;
     }
 																 
     //---------------------------------------------------------------------------
@@ -126,19 +127,19 @@ class Krislet implements SendCommand
     // This is main loop for player
     protected void mainInit() throws IOException
     {
-	byte[] buffer = new byte[MSG_SIZE];
-	DatagramPacket packet = new DatagramPacket(buffer, MSG_SIZE);
-
-	// first we need to initialize connection with server
-	init();
-
-	m_socket.receive(packet);
-	parseInitCommand(new String(buffer));
-	m_port = packet.getPort();
-	    
+        byte[] buffer = new byte[MSG_SIZE];
+        DatagramPacket packet = new DatagramPacket(buffer, MSG_SIZE);
+    
+        // first we need to initialize connection with server
+        init();
+    
+        m_socket.receive(packet);
+        parseInitCommand(new String(buffer));
+        m_port = packet.getPort();
     }
 
-    protected void mainUpdate() throws IOException {
+    protected void mainUpdate() throws IOException 
+    {
 		parseSensorInformation(receive());
     }
 
@@ -233,20 +234,21 @@ class Krislet implements SendCommand
     private void parseSensorInformation(String message)
 	throws IOException
     {
-	// First check kind of information		
-	Matcher m=message_pattern.matcher(message);
-	if(!m.matches())
+        // First check kind of information		
+        Matcher m = message_pattern.matcher(message);
+        if (!m.matches())
 	    {
-		throw new IOException(message);
+	        throw new IOException(message);
 	    }
-	if( m.group(1).compareTo("see") == 0 )
+	
+	    if( m.group(1).compareTo("see") == 0 )
 	    {
-		VisualInfo	info = new VisualInfo(message);
-		info.parse();
-		m_memory.store(info);
+            VisualInfo	info = new VisualInfo(message);
+            info.parse();
+            m_memory.store(info);
 	    }
-	else if( m.group(1).compareTo("hear") == 0 )
-	    parseHear(message);
+	    else if( m.group(1).compareTo("hear") == 0 )
+	        parseHear(message);
     }
 
 
@@ -296,16 +298,21 @@ class Krislet implements SendCommand
     // This function waits for new message from server
     private String receive() 
     {
-	byte[] buffer = new byte[MSG_SIZE];
-	DatagramPacket packet = new DatagramPacket(buffer, MSG_SIZE);
-	try{
-	    m_socket.receive(packet);
-	}catch(SocketException e){ 
-	    System.out.println("shutting down...");
-	}catch(IOException e){
-	    System.err.println("socket receiving error " + e);
-	}
-	return new String(buffer);
+        byte[] buffer = new byte[MSG_SIZE];
+        DatagramPacket packet = new DatagramPacket(buffer, MSG_SIZE);
+        try
+        {
+            m_socket.receive(packet);
+        }
+        catch(SocketException e)
+        { 
+            System.out.println("shutting down...");
+        }
+        catch(IOException e)
+        {
+            System.err.println("socket receiving error " + e);
+        }
+        return new String(buffer);
     }
 
 				
@@ -322,6 +329,7 @@ class Krislet implements SendCommand
     private Pattern message_pattern = Pattern.compile("^\\((\\w+?)\\s.*");
     private Pattern hear_pattern = Pattern.compile("^\\(hear\\s(\\w+?)\\s(\\w+?)\\s(.*)\\).*");
     public Memory m_memory;
+    public String m_name;
     public char m_side;
     //private Pattern coach_pattern = Pattern.compile("coach");
     // constants
