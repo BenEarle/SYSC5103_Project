@@ -44,8 +44,10 @@ public class KrisletEnvironment extends Environment {
 
 	public static final Literal    enteringInTheField = Literal.parseLiteral("enteringInTheField");
 	public static final Literal    turn40 = Literal.parseLiteral("turn40");
-	public static final Literal    dash = Literal.parseLiteral("dash");
-	public static final Literal    kick = Literal.parseLiteral("kick");
+	public static final Literal    goToBall = Literal.parseLiteral("goToBall");
+	public static final Literal    turnToBall = Literal.parseLiteral("turnToBall");
+	public static final Literal    kickBall50 = Literal.parseLiteral("kickBall50");
+	public static final Literal    noAction = Literal.parseLiteral("noAction");
     @Override
 
     public boolean executeAction(String agName, Structure action) {
@@ -68,8 +70,17 @@ public class KrisletEnvironment extends Environment {
 		else if(action.equals(turn40)){
 			act("turn40");
 		}
-		else if(action.equals(dash)){
-			act("dash");
+		else if(action.equals(goToBall)){
+			act("goToBall");
+		}
+		else if(action.equals(turnToBall)){
+			act("turnToBall");
+		}
+		else if(action.equals(kickBall50)){
+			act("kickBall50");
+		}
+		else if(action.equals(noAction)){
+			//
 		}
 		else {
 			logger.info("executing: "+action+", but not implemented!");
@@ -126,21 +137,19 @@ public class KrisletEnvironment extends Environment {
 					player.dash(100);
 					return action;
 				}
-    			else if(action.equals("goToBall")) {
+    			else if(action.equals("goToBall") && ball!=null) {
 					player.dash(10*ball.m_distance);
 					return action;
 				}
-				else if(action.equals("kickBall50")) {
+				else if(action.equals("kickBall50") && goal!=null) {
 					player.kick(50, goal.m_direction);
 					return action;
 				}
-				else if(action.equals("kickBall100")) {
+				else if(action.equals("kickBall100") && goal!=null) {
 					player.kick(100, goal.m_direction);
 					return action;
-			//	}
-    			//m_krislet
-    		//}
-    	}
+					}
+    			
     	return "NoAction";
     }
 
@@ -180,41 +189,42 @@ public class KrisletEnvironment extends Environment {
 			/*else if(//m_timeOver) {
 		    	//return "TimeOver";
 		    }*/
-		    else if( ball == null )
+		    if( ball == null )
 			    {
 				// If you don't know where is ball then find it
 		    	addPercept(ASSyntax.parseLiteral("noBall"));   
 				logger.info("noBall");
 			    }
-			else if( ball.m_distance > 1.0 )
+			if( ball != null && ball.m_distance > 1.0 && ball.m_direction != 0 )
 			    {
 				// If ball is too far then
 				// turn to ball or 
 				// if we have correct direction then go to ball
-				if( ball.m_direction != 0 ){
+				
 				addPercept(ASSyntax.parseLiteral("ballFarKnowDirection"));   
 				logger.info("ballFarKnowDirection");
 				}
-				else{
+			if (ball != null && ball.m_distance > 1.0 && ball.m_direction == 0){
 					addPercept(ASSyntax.parseLiteral("ballFarNoDirection"));   
 					logger.info("ballFarNoDirection");
 					}
-			    }
-			else 
-			    {
+			if (ball != null && ball.m_distance < 1.0){
+				addPercept(ASSyntax.parseLiteral("ballClose"));   
+				logger.info("ballClose");
+				}    
 				// We know where is ball and we can kick it
 				// so look for goal
-				if( goal == null )
+			if ( goal == null )
 				    {
-					addPercept(ASSyntax.parseLiteral("ballCloseNoGoal"));   
-					logger.info("ballCloseNoGoal");
+					addPercept(ASSyntax.parseLiteral("noGoal"));   
+					logger.info("noGoal");
 				    }
-				else{
-					addPercept(ASSyntax.parseLiteral("ballCloseSeeGoal"));   
-					logger.info("ballCloseSeeGoal");
+			if ( goal != null ){
+					addPercept(ASSyntax.parseLiteral("seeGoal"));   
+					logger.info("seeGoal");
 				}
 				   
-			    }		
+			    		
 		} catch (Exception e) {}
 	}
 
