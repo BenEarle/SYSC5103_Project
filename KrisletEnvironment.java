@@ -97,7 +97,7 @@ public class KrisletEnvironment extends Environment {
 
     }
 
-    public String act(String action) throws InterruptedException{//, ArrayList<String[]> list) {
+    public String act(String action) {//, ArrayList<String[]> list) {
     	ObjectInfo ball = player.m_memory.getObject("ball");
     	ObjectInfo goal;
     	if( player.m_side == 'l' )
