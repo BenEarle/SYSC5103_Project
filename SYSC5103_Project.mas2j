@@ -1,41 +1,30 @@
 /*
-
     sYSC5103_Project
-
     ---------------------------
-
-
 
     Jason Project File
 
-
-
     This file defines the initial state of the MAS
 
-
-
     Jason 
-
     March 21, 2020 - 14:33:28
-
 */
-
-
 
 MAS sYSC5103_Project {
 
-
-
     infrastructure: Centralised
 
-
-
-    environment: KrisletEnvironment
+    environment: KrisletEnvironment("SYSC5103_Project.mas2j")
 
     agents:
 
-        playerAgent;
-
+		//playerAgent;
+		
+		// Make multiples of this agent
+		playerAgent #2;
+		
+		// Make agent with logging, located at http://localhost:3273/
+        //playerAgent [mindinspector="web(cycle, html, history)"];
 }
 
 
