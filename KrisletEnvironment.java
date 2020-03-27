@@ -97,7 +97,7 @@ public class KrisletEnvironment extends Environment {
 
     }
 
-    public String act(String action){//, ArrayList<String[]> list) {
+    public String act(String action) throws InterruptedException{//, ArrayList<String[]> list) {
     	ObjectInfo ball = player.m_memory.getObject("ball");
     	ObjectInfo goal;
     	if( player.m_side == 'l' )
@@ -116,7 +116,7 @@ public class KrisletEnvironment extends Environment {
     			}
     			else if(action.equals("turn40")) {
     				player.turn(40);
-    			//	player.m_memory.waitForNewInfo();
+    				//player.m_memory.waitForNewInfo();
     				return action;
     			}
     			else if(action.equals("turn80")) {
@@ -129,7 +129,7 @@ public class KrisletEnvironment extends Environment {
     			//	player.m_memory.waitForNewInfo();
     				return action;
     			}
-    			else if(action.equals("turnToBall")) {
+    			else if(action.equals("turnToBall") && ball!=null) {
     				player.turn(ball.m_direction);
     				return action;
     			}
