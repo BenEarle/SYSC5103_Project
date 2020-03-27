@@ -21,7 +21,7 @@ MAS sYSC5103_Project {
 		//playerAgent;
 		
 		// Make multiples of this agent
-		playerAgent #2;
+		playerAgent #5;
 		
 		// Make agent with logging, located at http://localhost:3273/
         //playerAgent [mindinspector="web(cycle, html, history)"];

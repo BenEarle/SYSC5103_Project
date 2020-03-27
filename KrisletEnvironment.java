@@ -201,10 +201,8 @@ public class KrisletEnvironment extends Environment
 	private void updatePlayer(Krislet p){
 		try {
 			// Specify agent name !!!
-			clearPercepts();
-			//addPercept(ASSyntax.parseLiteral("percept(demo)"));
-			//addPercept(ASSyntax.parseLiteral("ball"));   
-			//logger.info("Ball was seen");
+			clearPercepts(p.m_name);
+
 			ObjectInfo ball = p.m_memory.getObject("ball");
 			ObjectInfo goal;
 			if( p.m_side == 'l' )
@@ -214,37 +212,37 @@ public class KrisletEnvironment extends Environment
 		    
 			if(/*Pattern.matches("^before_kick_off.*",m_playMode) &&*/ !p.inField) {
 				p.inField= true;
-				addPercept(ASSyntax.parseLiteral("readyToStart"));   
-				logger.info("readyToStart");
+				addPercept(p.m_name, ASSyntax.parseLiteral("readyToStart"));   
+				//logger.info("readyToStart");
 			}
 			/*else if(//m_timeOver) {
 		    	//return "TimeOver";
 		    }*/
 		    if( ball == null ) {
 				// If you don't know where is ball then find it
-		    	//addPercept(ASSyntax.parseLiteral("noBall"));   
-				logger.info("cannotSeeBall");
+		    	//addPercept(p.m_name, ASSyntax.parseLiteral("noBall"));   
+				logger.info("Add cannotSeeBall to " + p.m_name);
 			} else if(ball.m_distance > 1.0 && ball.m_direction != 0 ) {
 				// If ball is too far to kick and we are not facing it
-				addPercept(ASSyntax.parseLiteral("canSeeBall"));   
-				logger.info("canSeeBall");
+				addPercept(p.m_name, ASSyntax.parseLiteral("canSeeBall"));   
+				logger.info("Add canSeeBall to " + p.m_name);
 			} else if (ball.m_distance > 1.0 && ball.m_direction == 0){
 				// If ball is too far to kick and we are facing it
-				addPercept(ASSyntax.parseLiteral("canSeeBall")); 
-				addPercept(ASSyntax.parseLiteral("facingBall"));   
-				logger.info("facingBall");
+				addPercept(p.m_name, ASSyntax.parseLiteral("canSeeBall")); 
+				addPercept(p.m_name, ASSyntax.parseLiteral("facingBall"));   
+				logger.info("Add facingBall to " + p.m_name);
 			} else {
 				// Close enough to kick the ball
-				addPercept(ASSyntax.parseLiteral("canKickBall"));   
-				logger.info("canKickBall");
+				addPercept(p.m_name, ASSyntax.parseLiteral("canKickBall"));   
+				logger.info("Add canKickBall to " + p.m_name);
 			}    
 			// Look for goal
 			if ( goal == null ) {
-				//addPercept(ASSyntax.parseLiteral("noGoal"));   
-				logger.info("cannotSeeGoal");
+				//addPercept(p.m_name, ASSyntax.parseLiteral("noGoal"));   
+				logger.info("Add cannotSeeGoal to " + p.m_name);
 		    } else {
-				addPercept(ASSyntax.parseLiteral("canSeeGoal"));   
-				logger.info("canSeeGoal");
+				addPercept(p.m_name, ASSyntax.parseLiteral("canSeeGoal"));   
+				logger.info("Add canSeeGoal to " + p.m_name);
 			}
 				   
 			    		
