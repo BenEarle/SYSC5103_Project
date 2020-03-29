@@ -333,5 +333,9 @@ class Krislet implements SendCommand
     //private Pattern coach_pattern = Pattern.compile("coach");
     // constants
     private static final int	MSG_SIZE = 4096;	// Size of socket buffer
+	public String getTeam() {
+		// TODO Auto-generated method stub
+		return m_team;
+	}
 
 }

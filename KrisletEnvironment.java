@@ -73,8 +73,6 @@ public class KrisletEnvironment extends Environment
                      * NOTE: We will probably only want to do this beore the 
                      * kickoff only
                      */
-                    /* Put the player somewhere on the field */
-                    player[playerNumber].move(-Math.random()*52.5 , 34 - Math.random()*68.0);
                     updatePlayer(player[playerNumber]);
         
                     ++playerNumber;
@@ -91,6 +89,7 @@ public class KrisletEnvironment extends Environment
 	public static final Literal    enteringInTheField = Literal.parseLiteral("enteringInTheField");
 	public static final Literal    turn40 = Literal.parseLiteral("turn40");
 	public static final Literal    goToBall = Literal.parseLiteral("goToBall");
+	public static final Literal    goToBallSlowly = Literal.parseLiteral("goToBallSlowly");
 	public static final Literal    turnToBall = Literal.parseLiteral("turnToBall");
 	public static final Literal    kickBall50 = Literal.parseLiteral("kickBall50");
 	public static final Literal    noAction = Literal.parseLiteral("noAction");
@@ -175,12 +174,16 @@ public class KrisletEnvironment extends Environment
 		else if(action.equals("goToBall") && ball!=null) {
 			player.dash(10*ball.m_distance);
 		}
+		else if(action.equals("goToBallSlowly") && ball!=null) {
+			player.dash(0.5*ball.m_distance);
+		}
 		else if(action.equals("kickBall50") && goal!=null) {
 			player.kick(50, goal.m_direction);
 		}
 		else if(action.equals("kickBall100") && goal!=null) {
 			player.kick(100, goal.m_direction);
 		}
+		
 		else if(action.equals("noAction")) {
 		}
 		else {
@@ -201,10 +204,8 @@ public class KrisletEnvironment extends Environment
 	private void updatePlayer(Krislet p){
 		try {
 			// Specify agent name !!!
-			clearPercepts();
-			//addPercept(ASSyntax.parseLiteral("percept(demo)"));
-			//addPercept(ASSyntax.parseLiteral("ball"));   
-			//logger.info("Ball was seen");
+			clearPercepts(p.m_name);
+
 			ObjectInfo ball = p.m_memory.getObject("ball");
 			ObjectInfo goal;
 			if( p.m_side == 'l' )
@@ -214,43 +215,91 @@ public class KrisletEnvironment extends Environment
 		    
 			if(/*Pattern.matches("^before_kick_off.*",m_playMode) &&*/ !p.inField) {
 				p.inField= true;
-				addPercept(ASSyntax.parseLiteral("readyToStart"));   
-				logger.info("readyToStart");
+				addPercept(p.m_name, ASSyntax.parseLiteral("readyToStart"));   
+				//logger.info("readyToStart");
 			}
 			/*else if(//m_timeOver) {
 		    	//return "TimeOver";
 		    }*/
 		    if( ball == null ) {
 				// If you don't know where is ball then find it
-		    	//addPercept(ASSyntax.parseLiteral("noBall"));   
-				logger.info("cannotSeeBall");
+		    	//addPercept(p.m_name, ASSyntax.parseLiteral("noBall"));   
+				logger.info("Add cannotSeeBall to " + p.m_name);
 			} else if(ball.m_distance > 1.0 && ball.m_direction != 0 ) {
 				// If ball is too far to kick and we are not facing it
-				addPercept(ASSyntax.parseLiteral("canSeeBall"));   
-				logger.info("canSeeBall");
+				addPercept(p.m_name, ASSyntax.parseLiteral("canSeeBall"));   
+				logger.info("Add canSeeBall to " + p.m_name);
 			} else if (ball.m_distance > 1.0 && ball.m_direction == 0){
 				// If ball is too far to kick and we are facing it
-				addPercept(ASSyntax.parseLiteral("canSeeBall")); 
-				addPercept(ASSyntax.parseLiteral("facingBall"));   
-				logger.info("facingBall");
+				addPercept(p.m_name, ASSyntax.parseLiteral("canSeeBall")); 
+				addPercept(p.m_name, ASSyntax.parseLiteral("facingBall"));   
+				logger.info("Add facingBall to " + p.m_name);
+				if(closestToBall(p,2)){
+					addPercept(p.m_name, ASSyntax.parseLiteral("closestToBall"));   
+					logger.info("Add closestToBall " + p.m_name);
+				}
+				else{
+					logger.info("Add not closestToBall" + p.m_name);
+				}
 			} else {
 				// Close enough to kick the ball
-				addPercept(ASSyntax.parseLiteral("canKickBall"));   
-				logger.info("canKickBall");
+				addPercept(p.m_name, ASSyntax.parseLiteral("canKickBall"));   
+				logger.info("Add canKickBall to " + p.m_name);
 			}    
 			// Look for goal
 			if ( goal == null ) {
-				//addPercept(ASSyntax.parseLiteral("noGoal"));   
-				logger.info("cannotSeeGoal");
+				//addPercept(p.m_name, ASSyntax.parseLiteral("noGoal"));   
+				logger.info("Add cannotSeeGoal to " + p.m_name);
 		    } else {
-				addPercept(ASSyntax.parseLiteral("canSeeGoal"));   
-				logger.info("canSeeGoal");
+				addPercept(p.m_name, ASSyntax.parseLiteral("canSeeGoal"));   
+				logger.info("Add canSeeGoal to " + p.m_name);
 			}
 				   
 			    		
 		} catch (Exception e) {}
 	}
-	
+	/*
+	 * 
+	 */
+	private boolean closestToBall(Krislet p, int number){
+		int closestThanMe = 0;
+		LinkedList<PlayerInfo> team = getTeamPlayers(p,p.getTeam());
+		ObjectInfo ball = p.m_memory.getObject("ball");
+		if (ball==null){
+			return false;
+		}
+		float distance = 0;
+		float my_distance = ball.m_distance;
+		for(int i = 0; i < team.size(); i++){
+			float partner_distance = team.get(i).m_distance;
+			if(partner_distance < my_distance){
+					closestThanMe++;
+				}
+		}
+		
+		return closestThanMe < number;
+	}
+	/*
+	 * 
+	 */
+	public LinkedList<PlayerInfo> getTeamPlayers(Krislet player, String teamName) 
+    {
+	LinkedList<PlayerInfo> players = new LinkedList<PlayerInfo>();
+	if( player.m_memory.getInfo() == null )
+	    return null;
+
+	for(int c = 0 ; c < player.m_memory.getInfo().m_objects.size() ; c ++)
+	    {
+		ObjectInfo object = (ObjectInfo)player.m_memory.getInfo().m_objects.elementAt(c);
+		if(object.m_type.compareTo("player")==0){
+		    PlayerInfo p = (PlayerInfo) object;
+		    if(p.m_teamName.equals(teamName)){
+		    players.add(p);	
+		    }
+		    }
+	    }												 
+	return players;
+    }
 	/**
 	 * Name: getPlayerNumber
 	 *
@@ -281,5 +330,3 @@ public class KrisletEnvironment extends Environment
     }
 
 }
-
-

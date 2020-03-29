@@ -41,7 +41,8 @@
 // The agent can see it but is not facing it, turn to face it
 +!runToBall: canSeeBall & not facingBall <- turnToBall; !runToBall.
 // The agent is inline with the ball and facing it, then we need to run forward
-+!runToBall: canSeeBall & facingBall & not canKick <- goToBall; !runToBall.
++!runToBall: canSeeBall & facingBall & not canKick & closestToBall<- goToBall; !runToBall.
++!runToBall: canSeeBall & facingBall & not canKick<- goToBallSlowly; !runToBall.
 /******************************************************************************/
 // Need to locate the goal, if we don't see it. No point in searching if we 
 // cannot see the ball.
