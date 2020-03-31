@@ -272,7 +272,7 @@ public class KrisletEnvironment extends Environment
      */
 	private boolean closestToBall(Krislet p, int number){
 		int closestThanMe = 0;
-		LinkedList<PlayerInfo> team = getTeamPlayers(p,p.getTeam());
+		LinkedList<PlayerInfo> team = getTeamPlayers(p);
 		ObjectInfo ball = p.m_memory.getObject("ball");
 		if (ball==null){
 			return false;
@@ -291,10 +291,9 @@ public class KrisletEnvironment extends Environment
 	/*
      * This function takes as parameters:
      * @player: Krislet object
-     * @teamName: a String 
      * returns in a LinkedList<PlayerInfo> all the players that I can see and are in the same team
      */
-	public LinkedList<PlayerInfo> getTeamPlayers(Krislet player, String teamName) 
+	public LinkedList<PlayerInfo> getTeamPlayers(Krislet player) 
     {
 	LinkedList<PlayerInfo> players = new LinkedList<PlayerInfo>();
 	if( player.m_memory.getInfo() == null )
@@ -305,7 +304,7 @@ public class KrisletEnvironment extends Environment
 		ObjectInfo object = (ObjectInfo)player.m_memory.getInfo().m_objects.elementAt(c);
 		if(object.m_type.compareTo("player")==0){
 		    PlayerInfo p = (PlayerInfo) object;
-		    if(p.m_teamName.equals(teamName)){
+		    if(p.m_teamName.equals(player.getTeam())){
 		    players.add(p);	
 		    }
 		    }
