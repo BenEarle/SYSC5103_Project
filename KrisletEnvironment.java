@@ -130,7 +130,12 @@ public class KrisletEnvironment extends Environment
 
     }
 
-
+    /*
+     * This function takes as parameters:
+     * @action: String for the action to be performed
+     * @player: Krislet object to whom the action should be applied
+     * returns true if the action as been performed and false otherwise
+     */
     public boolean act(String action, Krislet player)
     {
     	ObjectInfo ball;
@@ -258,9 +263,13 @@ public class KrisletEnvironment extends Environment
 			    		
 		} catch (Exception e) {}
 	}
-	/*
-	 * 
-	 */
+    /*
+     * This function takes as parameters:
+     * @p: Krislet object to whom the action should be applied
+     * @number: an int, if less than number player(s) (of my team) are "closest" to the ball than me, 
+     * then I will run with "normal" speed to the ball, else I will reduced my seed
+     * returns true if number of closest than me is < number, else false
+     */
 	private boolean closestToBall(Krislet p, int number){
 		int closestThanMe = 0;
 		LinkedList<PlayerInfo> team = getTeamPlayers(p,p.getTeam());
@@ -280,8 +289,11 @@ public class KrisletEnvironment extends Environment
 		return closestThanMe < number;
 	}
 	/*
-	 * 
-	 */
+     * This function takes as parameters:
+     * @player: Krislet object
+     * @teamName: a String 
+     * returns in a LinkedList<PlayerInfo> all the players that I can see and are in the same team
+     */
 	public LinkedList<PlayerInfo> getTeamPlayers(Krislet player, String teamName) 
     {
 	LinkedList<PlayerInfo> players = new LinkedList<PlayerInfo>();
