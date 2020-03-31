@@ -31,6 +31,8 @@ interface SendCommand
     void say(String message);
     // This function sends chage_view command to the server
     void changeView(String angle, String quality);
+    // This function sends catch command to the server
+    void catch_ball(double angle);
     // This function sends a bye command to the server
     void bye();
 }

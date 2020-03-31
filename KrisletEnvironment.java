@@ -12,8 +12,11 @@ import java.util.regex.Pattern;
 
 public class KrisletEnvironment extends Environment 
 {
-    public static final int C_MAX_PLAYERS = 5;
+    /* We can make a 5-on-5 team if needed. */
+    public static final int C_MAX_PLAYERS = 10;
     public static final int C_INVALID_PLAYER = -99;
+    
+    public static final boolean DEBUG_LOGGING = false
 
     private Logger logger = Logger.getLogger("SYSC5103_Project.mas2j."+KrisletEnvironment.class.getName());
 	private Krislet player[];
@@ -26,10 +29,12 @@ public class KrisletEnvironment extends Environment
         jason.mas2j.parser.mas2j    parser;
 	    MAS2JProject                project;
 	    List<String>                names = new ArrayList<String>();
+	    boolean                     isGoalie = false;
 		String                      hostName = "localhost";
-		String                      team = new String("Krislet3");
+		String                      team = "MEMA";
 		int                         port = 6000;
 		int                         playerNumber = 0;
+		int                         count = 0;
 				
         super.init(args);
         player = new Krislet[C_MAX_PLAYERS];
@@ -58,23 +63,36 @@ public class KrisletEnvironment extends Environment
                     }
                     
                     /**
+                     * If we need to generate the entire team ourselves, we can
+                     * double the number of agents created in the .mas2j file
+                     * and enable this code.
+                     */
+                     
+                    if (count % 2 == 0)
+                    {
+                        team = "MEMA_Home";
+                    }
+                    else
+                    {
+                        team = "MEMA_Away";   
+                    }
+                    ++count;
+
+//                    isGoalie = agName.equals("keeperAgent");
+
+                    /**
                      * Stick the agent name into the Krislet object so we can
                      * associate it with what we get from the jason framework.
                      */
                     player[playerNumber] = new Krislet(InetAddress.getByName(hostName), 
                                                        port, 
                                                        team,
-                                                       numberedAg);
+                                                       numberedAg,
+                                                       isGoalie);
                     player[playerNumber].mainInit();
                     player[playerNumber].mainUpdate();
-                    
-                    
-                    /**
-                     * NOTE: We will probably only want to do this beore the 
-                     * kickoff only
-                     */
+
                     updatePlayer(player[playerNumber]);
-        
                     ++playerNumber;
                 }
             }
@@ -87,13 +105,22 @@ public class KrisletEnvironment extends Environment
     }
 
 	public static final Literal    enteringInTheField = Literal.parseLiteral("enteringInTheField");
+	public static final Literal    turn20 = Literal.parseLiteral("turn20");
 	public static final Literal    turn40 = Literal.parseLiteral("turn40");
+	public static final Literal    turn120 = Literal.parseLiteral("turn120");
 	public static final Literal    goToBall = Literal.parseLiteral("goToBall");
 	public static final Literal    goToBallSlowly = Literal.parseLiteral("goToBallSlowly");
+	public static final Literal    goToBallQuickly = Literal.parseLiteral("goToBallQuickly");
 	public static final Literal    turnToBall = Literal.parseLiteral("turnToBall");
 	public static final Literal    kickBall50 = Literal.parseLiteral("kickBall50");
 	public static final Literal    noAction = Literal.parseLiteral("noAction");
-
+	public static final Literal    runToDefGoal = Literal.parseLiteral("runTowardsDefGoal");
+	public static final Literal    turnTowardsDefGoal = Literal.parseLiteral("turnTowardsDefGoal");
+	public static final Literal    turnTowardsDefFlag = Literal.parseLiteral("turnTowardsDefFlag");
+	public static final Literal    runTowardsDefFlag = Literal.parseLiteral("runTowardsDefFlag");
+	public static final Literal    clearBall = Literal.parseLiteral("clearBall");
+	public static final Literal    enteringInTheGoal = Literal.parseLiteral("enteringInTheGoal");
+	
     @Override
     public boolean executeAction(String agName, Structure action) {
         int playerNumber = C_INVALID_PLAYER;
@@ -108,13 +135,22 @@ public class KrisletEnvironment extends Environment
 		}
 		// Call act with the given command, if it fails log the result.
 		if(!act(action.toString(),player[playerNumber]))
-			logger.info("*****\nError: " + action + ", failed to execute!\n*****");
+		{
+		    if (DEBUG_LOGGING)
+		    {
+		        logger.info("*****\nError: " + action + ", failed to execute!\n*****");
+		    }
+		}
 		else
-			logger.info("Executed: " + action);
-		if (true) { // Always update the player's environment
-			updatePlayer(player[playerNumber]);
-            informAgsEnvironmentChanged();
-        }
+		{
+		    if (DEBUG_LOGGING)
+		    {
+		        logger.info("Executed: " + action);
+			}
+		}
+		
+        updatePlayer(player[playerNumber]);
+        informAgsEnvironmentChanged();
         
 		try
 		{
@@ -138,14 +174,28 @@ public class KrisletEnvironment extends Environment
      */
     public boolean act(String action, Krislet player)
     {
+ 
     	ObjectInfo ball;
-    	ObjectInfo goal;
+    	ObjectInfo attackingGoal;
+    	ObjectInfo defendingGoal;
+    	ObjectInfo defendingBox;
+    	
 		// Get relavent information
     	ball = player.m_memory.getObject("ball");
     	if( player.m_side == 'l' )
-    	    goal = player.m_memory.getObject("goal r");
+    	{
+    	    attackingGoal = player.m_memory.getObject("goal r");
+    	    
+    	    defendingGoal = player.m_memory.getObject("goal l");
+    	    defendingBox = player.m_memory.getObject("flag p l c");
+    	}
     	else
-    	    goal = player.m_memory.getObject("goal l");
+    	{
+    	    attackingGoal = player.m_memory.getObject("goal l");
+    	    
+    	    defendingGoal = player.m_memory.getObject("goal r");
+    	    defendingBox = player.m_memory.getObject("flag p r c");
+    	}
 		// Handle the action
 		if(action.equals("enteringInTheField")) {
 			player.inField = true;
@@ -182,19 +232,41 @@ public class KrisletEnvironment extends Environment
 		else if(action.equals("goToBallSlowly") && ball!=null) {
 			player.dash(0.5*ball.m_distance);
 		}
-		else if(action.equals("kickBall50") && goal!=null) {
-			player.kick(50, goal.m_direction);
+		else if(action.equals("goToBallQuickly") && ball!=null) {
+			player.dash(20*ball.m_distance);
 		}
-		else if(action.equals("kickBall100") && goal!=null) {
-			player.kick(100, goal.m_direction);
+		else if(action.equals("kickBall50") && attackingGoal!=null) {
+			player.kick(50, attackingGoal.m_direction);
 		}
-		
+		else if(action.equals("kickBall100") && attackingGoal!=null) {
+			player.kick(100, attackingGoal.m_direction);
+		}
+		else if(action.equals("runTowardsDefGoal") && defendingGoal!=null) {
+			player.dash(100 * defendingGoal.m_distance);
+		}
+		else if(action.equals("turnTowardsDefGoal") && defendingGoal!=null) {
+			player.turn(defendingGoal.m_direction);
+		}
+		else if(action.equals("runTowardsDefFlag") && defendingBox!=null) {
+			player.dash(100 * defendingBox.m_distance);
+		}
+		else if(action.equals("turnTowardsDefFlag") && defendingBox!=null) {
+			player.turn(defendingBox.m_direction);
+		}
+		else if(action.equals("clearBall")) {
+			player.kick(100, 0); // Kick ball directly forward
+		}
+		else if(action.equals("enteringInTheGoal")) {
+			player.inField = true;
+			player.move(-50, 0);
+		}
 		else if(action.equals("noAction")) {
 		}
 		else {
 			// If the action was unrecognized then return false
 			return false;
 		}
+
 		// Otherwise the action was properly handled, return true.
     	return true;
     }
@@ -206,60 +278,161 @@ public class KrisletEnvironment extends Environment
     }
 	
 	/** Private helper functions*/
-	private void updatePlayer(Krislet p){
-		try {
-			// Specify agent name !!!
+	private void updatePlayer(Krislet p)
+	{
+		try 
+		{
 			clearPercepts(p.m_name);
 
 			ObjectInfo ball = p.m_memory.getObject("ball");
-			ObjectInfo goal;
+			ObjectInfo attackingGoal;
+			ObjectInfo defendingGoal;
+			ObjectInfo defendingBox;
+			ObjectInfo defendingLine;
+			
+				if (p.m_memory.getObject("line l") != null)
+			    {
+			        System.out.printf("Can see left\n");    
+			    }
+			    if (p.m_memory.getObject("line l") != null)
+			    {
+			        System.out.printf("Can see right\n");    
+			    }
+			    
 			if( p.m_side == 'l' )
-			    goal = p.m_memory.getObject("goal r");
+			{
+			    attackingGoal = p.m_memory.getObject("goal r");
+			    
+			    defendingGoal = p.m_memory.getObject("goal l");
+			    defendingBox = p.m_memory.getObject("flag p l c");
+			    defendingLine = p.m_memory.getObject("line l");
+			}
 			else
-			    goal = p.m_memory.getObject("goal l");
+			{
+			    attackingGoal = p.m_memory.getObject("goal l");
+			    
+			    defendingGoal = p.m_memory.getObject("goal r");
+			    defendingBox = p.m_memory.getObject("flag p r c");
+			    defendingLine = p.m_memory.getObject("line r");		
+			}
 		    
 			if(/*Pattern.matches("^before_kick_off.*",m_playMode) &&*/ !p.inField) {
 				p.inField= true;
-				addPercept(p.m_name, ASSyntax.parseLiteral("readyToStart"));   
-				//logger.info("readyToStart");
+				addPercept(p.m_name, ASSyntax.parseLiteral("readyToStart")); 
+				if (DEBUG_LOGGING)
+				{
+				    logger.info("readyToStart");
+				}
 			}
 			/*else if(//m_timeOver) {
 		    	//return "TimeOver";
 		    }*/
+		    
 		    if( ball == null ) {
 				// If you don't know where is ball then find it
-		    	//addPercept(p.m_name, ASSyntax.parseLiteral("noBall"));   
-				logger.info("Add cannotSeeBall to " + p.m_name);
+		    	//addPercept(p.m_name, ASSyntax.parseLiteral("noBall")); 
+		    	if (DEBUG_LOGGING)
+		    	{
+		    	    logger.info("Add cannotSeeBall to " + p.m_name);
+				}
 			} else if(ball.m_distance > 1.0 && ball.m_direction != 0 ) {
 				// If ball is too far to kick and we are not facing it
 				addPercept(p.m_name, ASSyntax.parseLiteral("canSeeBall"));   
-				logger.info("Add canSeeBall to " + p.m_name);
+				if (DEBUG_LOGGING)
+				{
+				    logger.info("Add canSeeBall to " + p.m_name);
+				}
 			} else if (ball.m_distance > 1.0 && ball.m_direction == 0){
 				// If ball is too far to kick and we are facing it
 				addPercept(p.m_name, ASSyntax.parseLiteral("canSeeBall")); 
-				addPercept(p.m_name, ASSyntax.parseLiteral("facingBall"));   
-				logger.info("Add facingBall to " + p.m_name);
+				addPercept(p.m_name, ASSyntax.parseLiteral("facingBall"));  
+				if (DEBUG_LOGGING)
+				{
+				    logger.info("Add canSeeBall to " + p.m_name);
+				    logger.info("Add facingBall to " + p.m_name);
+                }
 				if(closestToBall(p,2)){
 					addPercept(p.m_name, ASSyntax.parseLiteral("closestToBall"));   
-					logger.info("Add closestToBall " + p.m_name);
+					if (DEBUG_LOGGING)
+					{
+					    logger.info("Add closestToBall " + p.m_name);
+                    }
 				}
 				else{
-					logger.info("Add not closestToBall" + p.m_name);
+				    if (DEBUG_LOGGING)
+				    {
+				        logger.info("Add not closestToBall" + p.m_name);
+                    }
 				}
 			} else {
 				// Close enough to kick the ball
+				addPercept(p.m_name, ASSyntax.parseLiteral("canSeeBall")); 
 				addPercept(p.m_name, ASSyntax.parseLiteral("canKickBall"));   
-				logger.info("Add canKickBall to " + p.m_name);
+				addPercept(p.m_name, ASSyntax.parseLiteral("clearBall")); 
+
+                if (DEBUG_LOGGING)
+                {
+                    logger.info("Add canSeeBall to " + p.m_name);
+                    logger.info("Add canKickBall to " + p.m_name);
+                    logger.info("Add clearBall to " + p.m_name);
+                }
 			}    
-			// Look for goal
-			if ( goal == null ) {
+			
+			// Look for attackingGoal
+			if ( attackingGoal == null ) {
 				//addPercept(p.m_name, ASSyntax.parseLiteral("noGoal"));   
-				logger.info("Add cannotSeeGoal to " + p.m_name);
+				if (DEBUG_LOGGING)
+				{
+				    logger.info("Add cannotSeeAttackingGoal to " + p.m_name);
+                }
 		    } else {
-				addPercept(p.m_name, ASSyntax.parseLiteral("canSeeGoal"));   
-				logger.info("Add canSeeGoal to " + p.m_name);
+				addPercept(p.m_name, ASSyntax.parseLiteral("canSeeAttackingGoal"));   
+				if (DEBUG_LOGGING)
+				{
+				    logger.info("Add canSeeAttackingGoal to " + p.m_name);
+                }
 			}
-				   
+			
+			// Look for defendingGoal
+			if (defendingGoal != null)
+			{
+			    addPercept(p.m_name, ASSyntax.parseLiteral("canSeeDefGoal")); 
+			    if (defendingGoal.m_direction == 0)
+			    {
+			        addPercept(p.m_name, ASSyntax.parseLiteral("facingDefGoal")); 
+			    }
+			    
+			    if (defendingGoal.m_distance < 5)
+			    {
+			        addPercept(p.m_name, ASSyntax.parseLiteral("atDefGoal")); 
+			    }
+			}
+			
+			// Look for the flag at the center of the defending penalty box
+			if (defendingBox != null)
+			{
+			    addPercept(p.m_name, ASSyntax.parseLiteral("canSeeDefFlag")); 
+			    if (defendingBox.m_direction == 0)
+			    {
+			        addPercept(p.m_name, ASSyntax.parseLiteral("facingDefFlag")); 
+			    }
+			    
+			    if (defendingBox.m_distance < 10)
+			    {
+			        addPercept(p.m_name, ASSyntax.parseLiteral("inPositionToDefend")); 
+			    }
+			}
+
+			if ((ball != null) && (ball.m_distance < 15.0))
+			{
+			    // Ball is close enough to the goal to be dangerous
+			    addPercept(p.m_name, ASSyntax.parseLiteral("dangerBall")); 
+			}
+			
+			if (defendingLine == null)
+			{
+			    addPercept(p.m_name, ASSyntax.parseLiteral("facingForwards")); 
+			}
 			    		
 		} catch (Exception e) {}
 	}

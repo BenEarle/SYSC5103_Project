@@ -100,7 +100,7 @@ class Krislet implements SendCommand
 
     //---------------------------------------------------------------------------
     // This constructor opens socket for  connection with server
-    public Krislet(InetAddress host, int port, String team, String name) 
+    public Krislet(InetAddress host, int port, String team, String name, boolean isGoalie) 
 	throws SocketException
     {
         m_socket = new DatagramSocket();
@@ -111,13 +111,14 @@ class Krislet implements SendCommand
         m_memory = new Memory();
         inField = false;
         m_name = name;
+        m_isGoalie = isGoalie;
     }
 																 
     //---------------------------------------------------------------------------
     // This destructor closes socket to server
     public void finalize()
     {
-	m_socket.close();
+        m_socket.close();
     }
 
 
@@ -128,15 +129,15 @@ class Krislet implements SendCommand
     // This is main loop for player
     protected void mainInit() throws IOException
     {
-	byte[] buffer = new byte[MSG_SIZE];
-	DatagramPacket packet = new DatagramPacket(buffer, MSG_SIZE);
-
-	// first we need to initialize connection with server
-	init();
-
-	m_socket.receive(packet);
-	parseInitCommand(new String(buffer));
-	m_port = packet.getPort();
+        byte[] buffer = new byte[MSG_SIZE];
+        DatagramPacket packet = new DatagramPacket(buffer, MSG_SIZE);
+    
+        // first we need to initialize connection with server
+        init();
+    
+        m_socket.receive(packet);
+        parseInitCommand(new String(buffer));
+        m_port = packet.getPort();
 	    
     }
 
@@ -199,6 +200,13 @@ class Krislet implements SendCommand
     {
 	send("(change_view " + angle + " " + quality + ")");
     }
+    
+    //---------------------------------------------------------------------------
+    // This function sends catch command to the server    
+    public void catch_ball(double angle)
+    {
+        send("(catch " + Double.toString(angle) + ")");
+    }
 
     //---------------------------------------------------------------------------
     // This function sends bye command to the server
@@ -229,7 +237,13 @@ class Krislet implements SendCommand
     // This function sends initialization command to the server
     private void init()
     {
-	send("(init " + m_team + " (version 9))");
+        String goalieStr = "";
+        if (m_isGoalie)
+        {
+            goalieStr = " (goalie)";
+        }
+        
+        send("(init " + m_team + " (version 9)" + goalieStr + ")");
     }
 
     //---------------------------------------------------------------------------
@@ -330,6 +344,7 @@ class Krislet implements SendCommand
     public char m_side;
     public boolean inField;
     public String m_name;
+    public boolean m_isGoalie;
     //private Pattern coach_pattern = Pattern.compile("coach");
     // constants
     private static final int	MSG_SIZE = 4096;	// Size of socket buffer
