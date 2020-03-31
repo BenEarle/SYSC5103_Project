@@ -16,7 +16,7 @@ public class KrisletEnvironment extends Environment
     public static final int C_MAX_PLAYERS = 10;
     public static final int C_INVALID_PLAYER = -99;
     
-    public static final boolean DEBUG_LOGGING = false
+    public static final boolean DEBUG_LOGGING = false;
 
     private Logger logger = Logger.getLogger("SYSC5103_Project.mas2j."+KrisletEnvironment.class.getName());
 	private Krislet player[];
@@ -67,7 +67,7 @@ public class KrisletEnvironment extends Environment
                      * double the number of agents created in the .mas2j file
                      * and enable this code.
                      */
-                     
+/*                     
                     if (count % 2 == 0)
                     {
                         team = "MEMA_Home";
@@ -77,8 +77,8 @@ public class KrisletEnvironment extends Environment
                         team = "MEMA_Away";   
                     }
                     ++count;
-
-//                    isGoalie = agName.equals("keeperAgent");
+*/
+                    isGoalie = agName.equals("keeperAgent");
 
                     /**
                      * Stick the agent name into the Krislet object so we can
@@ -289,16 +289,7 @@ public class KrisletEnvironment extends Environment
 			ObjectInfo defendingGoal;
 			ObjectInfo defendingBox;
 			ObjectInfo defendingLine;
-			
-				if (p.m_memory.getObject("line l") != null)
-			    {
-			        System.out.printf("Can see left\n");    
-			    }
-			    if (p.m_memory.getObject("line l") != null)
-			    {
-			        System.out.printf("Can see right\n");    
-			    }
-			    
+
 			if( p.m_side == 'l' )
 			{
 			    attackingGoal = p.m_memory.getObject("goal r");
