@@ -22,9 +22,7 @@ public class KrisletEnvironment extends Environment
 	private Krislet player[];
 	
     /** Called before the MAS execution with the args informed in .mas2j */
-
     @Override
-
     public void init(String[] args) {
         jason.mas2j.parser.mas2j    parser;
 	    MAS2JProject                project;
@@ -78,6 +76,10 @@ public class KrisletEnvironment extends Environment
                     }
                     ++count;
 */
+                    /**
+                     * We want to notify the Soccer Server that this agent is to
+                     * be designated as a goalie.
+                     */
                     isGoalie = agName.equals("keeperAgent");
 
                     /**
@@ -104,6 +106,9 @@ public class KrisletEnvironment extends Environment
 		}
     }
 
+    /**
+     * List of different actions that the agents will take
+     */
 	public static final Literal    enteringInTheField = Literal.parseLiteral("enteringInTheField");
 	public static final Literal    turn20 = Literal.parseLiteral("turn20");
 	public static final Literal    turn40 = Literal.parseLiteral("turn40");
@@ -119,6 +124,7 @@ public class KrisletEnvironment extends Environment
 	public static final Literal    turnTowardsDefFlag = Literal.parseLiteral("turnTowardsDefFlag");
 	public static final Literal    runTowardsDefFlag = Literal.parseLiteral("runTowardsDefFlag");
 	public static final Literal    clearBall = Literal.parseLiteral("clearBall");
+	public static final Literal    clearBallBackwards = Literal.parseLiteral("clearBallBackwards");
 	public static final Literal    enteringInTheGoal = Literal.parseLiteral("enteringInTheGoal");
 	
     @Override
@@ -179,8 +185,13 @@ public class KrisletEnvironment extends Environment
     	ObjectInfo attackingGoal;
     	ObjectInfo defendingGoal;
     	ObjectInfo defendingBox;
+    	ObjectInfo defendingLine;
     	
-		// Get relavent information
+		/**
+		 * Get the information that a given player can see. The ball will be the
+		 * same for both sides, but attacking/defending objects will be 
+		 * different for each side.
+		 */
     	ball = player.m_memory.getObject("ball");
     	if( player.m_side == 'l' )
     	{
@@ -188,6 +199,7 @@ public class KrisletEnvironment extends Environment
     	    
     	    defendingGoal = player.m_memory.getObject("goal l");
     	    defendingBox = player.m_memory.getObject("flag p l c");
+    	    defendingLine = player.m_memory.getObject("line l");
     	}
     	else
     	{
@@ -195,68 +207,138 @@ public class KrisletEnvironment extends Environment
     	    
     	    defendingGoal = player.m_memory.getObject("goal r");
     	    defendingBox = player.m_memory.getObject("flag p r c");
+    	    defendingLine = player.m_memory.getObject("line r");
     	}
-		// Handle the action
+		
 		if(action.equals("enteringInTheField")) {
+		    /**
+		     * A non-goalie player enters the field in a random location on
+		     * their side.
+		     */
 			player.inField = true;
 			player.move( -Math.random()*52.5 , 34 - Math.random()*68.0 );
 		}
 		else if(action.equals("stopPlaying")) {
+		    /**
+		     * Players disconnect from the server
+		     */
 			player.bye();
 		}
 		else if(action.equals("turn20")) {
+		    /**
+		     * Player turns 20 degrees
+		     */
 			player.turn(20);
-			//player.m_memory.waitForNewInfo();
 		}
 		else if(action.equals("turn40")) {
+		    /**
+		     * Player turns 40 degrees
+		     */
 			player.turn(40);
-			//player.m_memory.waitForNewInfo();
 		}
 		else if(action.equals("turn80")) {
+		    /**
+		     * Player turns 80 degrees
+		     */
 			player.turn(80);
-		//	player.m_memory.waitForNewInfo();
 		}
 		else if(action.equals("turn120")) {
+		    /**
+		     * Player turns 120 degrees
+		     */
 			player.turn(120);
-		//	player.m_memory.waitForNewInfo();
 		}
 		else if(action.equals("turnToBall") && ball!=null) {
+		    /**
+		     * Player turns towards the ball, if the ball can be seen
+		     */
 			player.turn(ball.m_direction);
 		}
 		else if(action.equals("dash")) {
+		    /**
+		     * Player dashes forwards with a power of 100
+		     */
 			player.dash(100);
 		}
 		else if(action.equals("goToBall") && ball!=null) {
+		    /**
+		     * Player dashes towards the ball with a power of 10 * the distance
+		     * from the ball, if the ball can be seen
+		     */
 			player.dash(10*ball.m_distance);
 		}
 		else if(action.equals("goToBallSlowly") && ball!=null) {
+		    /**
+		     * Player dashes towards the ball with a power of 0.5 * the distance
+		     * from the ball, if the ball can be seen
+		     */
 			player.dash(0.5*ball.m_distance);
 		}
 		else if(action.equals("goToBallQuickly") && ball!=null) {
+		    /**
+		     * Player dashes towards the ball with a power of 20 * the distance
+		     * from the ball, if the ball can be seen
+		     */
 			player.dash(20*ball.m_distance);
 		}
 		else if(action.equals("kickBall50") && attackingGoal!=null) {
+		    /**
+		     * Player kicks the ball with a power of 50 towards the attacking
+		     * goal, if it can be seen.
+		     */
 			player.kick(50, attackingGoal.m_direction);
 		}
 		else if(action.equals("kickBall100") && attackingGoal!=null) {
+		    /**
+		     * Player kicks the ball with a power of 100 towards the attacking
+		     * goal, if it can be seen.
+		     */
 			player.kick(100, attackingGoal.m_direction);
 		}
 		else if(action.equals("runTowardsDefGoal") && defendingGoal!=null) {
+		    /**
+		     * Player dashes towards the defending goal with a power of 100 * 
+		     * the distance from the goal, if the goal can be seen
+		     */
 			player.dash(100 * defendingGoal.m_distance);
 		}
 		else if(action.equals("turnTowardsDefGoal") && defendingGoal!=null) {
+		    /**
+		     * Player turns towards the defending goal, if the goal can be seen
+		     */
 			player.turn(defendingGoal.m_direction);
 		}
 		else if(action.equals("runTowardsDefFlag") && defendingBox!=null) {
+		    /**
+		     * Player dashes towards the defending flag (middle flag of the 
+		     * penalty box) with a power of 100 * the distance from the flag, 
+		     * if the flag can be seen
+		     */
 			player.dash(100 * defendingBox.m_distance);
 		}
 		else if(action.equals("turnTowardsDefFlag") && defendingBox!=null) {
+		    /**
+		     * Player turns towards the defending flag (middle flag of the 
+		     * penalty box), if the flag can be seen
+		     */
 			player.turn(defendingBox.m_direction);
 		}
 		else if(action.equals("clearBall")) {
-			player.kick(100, 0); // Kick ball directly forward
+		    /**
+		     * Player kicks the ball with a power of 100 forwards
+		     */
+			player.kick(100, 0);
+		}
+		else if (action.equals("clearBallBackwards")) {
+		    /**
+		     * Player kicks the ball with a power of 100 backwards
+		     */
+		     player.kick(100, 180);
 		}
 		else if(action.equals("enteringInTheGoal")) {
+		    /**
+		     * A goalie player enters the field in front of their goal
+		     */
 			player.inField = true;
 			player.move(-50, 0);
 		}
@@ -387,42 +469,98 @@ public class KrisletEnvironment extends Environment
 			// Look for defendingGoal
 			if (defendingGoal != null)
 			{
+			    /**
+			     * Player can see the defending goal, but might not be aligned
+			     * with it
+			     */
 			    addPercept(p.m_name, ASSyntax.parseLiteral("canSeeDefGoal")); 
+			    if (DEBUG_LOGGING)
+				{
+				    logger.info("Add canSeeDefGoal to " + p.m_name);
+                }
+			    
 			    if (defendingGoal.m_direction == 0)
 			    {
+			        /**
+                     * Player is aligned with the defending goal
+                     */
 			        addPercept(p.m_name, ASSyntax.parseLiteral("facingDefGoal")); 
+			        if (DEBUG_LOGGING)
+                    {
+                        logger.info("Add facingDefGoal to " + p.m_name);
+                    }
 			    }
 			    
 			    if (defendingGoal.m_distance < 5)
 			    {
-			        addPercept(p.m_name, ASSyntax.parseLiteral("atDefGoal")); 
+			        /**
+                     * Player is at the defending goal
+                     */
+			        addPercept(p.m_name, ASSyntax.parseLiteral("atDefGoal"));
+			        if (DEBUG_LOGGING)
+                    {
+                        logger.info("Add atDefGoal to " + p.m_name);
+                    }
 			    }
 			}
 			
 			// Look for the flag at the center of the defending penalty box
 			if (defendingBox != null)
 			{
-			    addPercept(p.m_name, ASSyntax.parseLiteral("canSeeDefFlag")); 
+			    /**
+			     * Player can see the defending flag, but might not be aligned
+			     * with it
+			     */
+			    addPercept(p.m_name, ASSyntax.parseLiteral("canSeeDefFlag"));
+			    if (DEBUG_LOGGING)
+                {
+                    logger.info("Add canSeeDefFlag to " + p.m_name);
+                }
 			    if (defendingBox.m_direction == 0)
 			    {
+			        /**
+                     * Player is aligned with the defending flag
+                     */
 			        addPercept(p.m_name, ASSyntax.parseLiteral("facingDefFlag")); 
+			        if (DEBUG_LOGGING)
+                    {
+                        logger.info("Add facingDefFlag to " + p.m_name);
+                    }
 			    }
 			    
 			    if (defendingBox.m_distance < 10)
 			    {
+			        /**
+                     * Player is at the defending flag
+                     */
 			        addPercept(p.m_name, ASSyntax.parseLiteral("inPositionToDefend")); 
+			        if (DEBUG_LOGGING)
+                    {
+                        logger.info("Add inPositionToDefend to " + p.m_name);
+                    }
 			    }
 			}
 
 			if ((ball != null) && (ball.m_distance < 15.0))
 			{
 			    // Ball is close enough to the goal to be dangerous
-			    addPercept(p.m_name, ASSyntax.parseLiteral("dangerBall")); 
+			    addPercept(p.m_name, ASSyntax.parseLiteral("dangerBall"));
+			    if (DEBUG_LOGGING)
+                {
+                    logger.info("Add dangerBall to " + p.m_name);
+                }
 			}
 			
 			if (defendingLine == null)
 			{
+			    /**
+                 * Player is facing forwards (goal is at its back)
+                 */
 			    addPercept(p.m_name, ASSyntax.parseLiteral("facingForwards")); 
+			    if (DEBUG_LOGGING)
+                {
+                    logger.info("Add facingForwards to " + p.m_name);
+                }
 			}
 			    		
 		} catch (Exception e) {}

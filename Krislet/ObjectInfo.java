@@ -230,7 +230,7 @@ class LineInfo extends ObjectInfo
 
   public LineInfo(char kind)
   {
-    super("line");
+    super("line " + kind);
     m_kind = kind;
   }
 }

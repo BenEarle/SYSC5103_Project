@@ -45,8 +45,9 @@
 // The agent is inline with the ball and it is a danger
 +!defendGoal: dangerBall & not clearBall <- goToBallQuickly; !defendGoal.
 // The agent is inline with the ball and it is a danger
-+!defendGoal: clearBall & facingForwards <- clearBall; .print("Facing Forwards: Clear Ball"); !goToDefGoal.
++!defendGoal: clearBall & facingForwards <- clearBall; !goToDefGoal.
 // The ball is behind the Agent, so we want to spin and then clear the ball
-+!defendGoal: clearBall & not facingForwards <- turn120; .print("Turn: 120"); !defendGoal.
++!defendGoal: clearBall & not facingForwards <- clearBallBackwards; !goToDefGoal.
+
 
 
