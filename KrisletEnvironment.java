@@ -424,19 +424,7 @@ public class KrisletEnvironment extends Environment
 				    logger.info("Add canSeeBall to " + p.m_name);
 				    logger.info("Add facingBall to " + p.m_name);
                 }
-				if(closestToBall(p,2)){
-					addPercept(p.m_name, ASSyntax.parseLiteral("closestToBall"));   
-					if (DEBUG_LOGGING)
-					{
-					    logger.info("Add closestToBall " + p.m_name);
-                    }
-				}
-				else{
-				    if (DEBUG_LOGGING)
-				    {
-				        logger.info("Add not closestToBall" + p.m_name);
-                    }
-				}
+				
 			} else {
 				// Close enough to kick the ball
 				addPercept(p.m_name, ASSyntax.parseLiteral("canSeeBall")); 
@@ -450,7 +438,19 @@ public class KrisletEnvironment extends Environment
                     logger.info("Add clearBall to " + p.m_name);
                 }
 			}    
-			
+		    if(p.inField && closestToBall(p,2)){
+				addPercept(p.m_name, ASSyntax.parseLiteral("closestToBall"));   
+				if (DEBUG_LOGGING)
+				{
+				    logger.info("Add closestToBall " + p.m_name);
+                }
+			}
+			else{
+			    if (DEBUG_LOGGING)
+			    {
+			        logger.info("Add not closestToBall" + p.m_name);
+                }
+			}
 			// Look for attackingGoal
 			if ( attackingGoal == null ) {
 				//addPercept(p.m_name, ASSyntax.parseLiteral("noGoal"));   
