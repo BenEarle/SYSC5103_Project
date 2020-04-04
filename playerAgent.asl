@@ -7,20 +7,6 @@
 
 
 /* Plans */
-/* Old plan:
-+!scoreGoal : true <- !beInTheField; !findBall; !beNearBall; !findGoal; kickBall50; !scoreGoal.
-+!beInTheField: readyToStart <- enteringInTheField.
-+!beInTheField: not readyToStart <- noAction.
-+!findBall: noBall <- turn40; !findBall.
-+!findBall: not noBall <- noAction.
-+!beNearBall: ballFarNoDirection <- turnToBall; !beNearBall.
-+!beNearBall: ballFarKnowDirection <- goToBall; !beNearBall.
-+!beNearBall: true <- noAction.
-+!findGoal: ballClose & noGoal <- turn40; !findGoal.
-+!findGoal: ballClose & seeGoal <- noAction.
-+!findGoal: not ballClose <- noAction.
-*/
-
 /******************************************************************************/
 // We always want to score a goal!
 // If the agent is in range and facing the goal it should kick the ball
