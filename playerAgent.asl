@@ -10,7 +10,7 @@
 /******************************************************************************/
 // We always want to score a goal!
 // If the agent is in range and facing the goal it should kick the ball
-+!scoreGoal: canKickBall & canSeeAttackingGoal <- kickBall50; !scoreGoal.
++!scoreGoal: canKickBall & canSeeAttackingGoal <- kickBall100; !scoreGoal.
 // If the agent is in range but not lined up it should locate the goal
 +!scoreGoal: canKickBall & not canSeeAttackingGoal <- !findGoal; !scoreGoal.
 // In all other cases the agent should run to the ball
